@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, field with context %}
+{% block title %}Log in, Edwom Online Mall{% endblock %}
+{% block content %}
+<section class="wrap page">
+  <form class="panel form narrow" method="post" novalidate>
+    {{ csrf() }}
+    <h1 style="font-size:1.9rem">Log in</h1>
+    {% if error %}<div class="flash flash-error">{{ error }}</div>{% endif %}
+    {{ field('email', 'Email', email, {}, type='email', attrs='autocomplete="email" required autofocus') }}
+    {{ field('password', 'Password', '', {}, type='password', attrs='autocomplete="current-password" required') }}
+    <label class="check"><input type="checkbox" name="remember" value="1" checked> Keep me logged in on this device</label>
+    <button class="btn btn-primary" type="submit">Log in</button>
+    <p class="note">New to Edwom? <a href="{{ url_for('auth.signup', next=request.args.get('next')) }}">Create an account</a></p>
+  </form>
+</section>
+{% endblock %}

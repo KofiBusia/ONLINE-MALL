@@ -1,0 +1,29 @@
+{% extends "admin/_base.html" %}
+{% from "_macros.html" import csrf, field, image_upload with context %}
+{% block title %}New shop, Edwom admin{% endblock %}
+{% block admin %}
+<a class="back" href="{{ url_for('admin.shops') }}">All shops</a>
+<h1>New shop</h1>
+<p class="lede">{% if application %}Prefilled from {{ application.business_name }}’s application. Check the details, then create the shop.{% else %}Set up the shop and its owner’s login. You’ll see a temporary password to give the owner.{% endif %}</p>
+<form class="admin-form" method="post" enctype="multipart/form-data" novalidate>
+  {{ csrf() }}
+  <section class="panel form">
+    <h2>Shop details</h2>
+    {% include "admin/_shop_fields.html" %}
+  </section>
+  <section class="panel form">
+    <h2>Owner login</h2>
+    <p class="note" style="margin:0">If this email already has a buyer account, it’s linked to the shop and keeps its password.</p>
+    <div class="row2">
+      {{ field('owner_name', 'Owner’s full name', data.owner_name, errors, attrs='required') }}
+      {{ field('owner_email', 'Owner’s email (their login)', data.owner_email, errors, type='email', attrs='required autocomplete="off"') }}
+    </div>
+  </section>
+  <section class="panel form">
+    <h2>Logo and banner <span class="hint">(optional, can be added later)</span></h2>
+    {{ image_upload('logo', 'Shop logo', None, errors, 'Square, at least 300 × 300 px.') }}
+    {{ image_upload('banner', 'Shop banner', None, errors, 'Wide, at least 1600 × 500 px.') }}
+  </section>
+  <div><button class="btn btn-primary" type="submit">Create shop</button></div>
+</form>
+{% endblock %}

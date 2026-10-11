@@ -1,0 +1,26 @@
+{# Expects: products, edit_endpoint, remove_endpoint #}
+{% from "_macros.html" import csrf, pic with context %}
+{% if products %}
+<div class="tbl-wrap"><table class="ptable">
+  <thead><tr><th>Product</th><th>Status</th><th class="num">Price</th><th class="num">Stock</th><th class="num">Sold</th><th class="num"><span class="sr">Actions</span></th></tr></thead>
+  <tbody>
+  {% for p in products %}
+    <tr>
+      <td><div class="prow">{{ pic(p.cover_key, p.icon, p.category, cls='mini sm') }}
+        <div><a href="{{ url_for('main.product', pid=p.id) }}">{{ p.name }}</a><br><span class="note">{{ p.category|cat_label }}, {{ p.images|length }} photo{{ '' if p.images|length == 1 else 's' }}</span></div></div></td>
+      <td>{% if not p.published %}<span class="status status-awaiting_payment">Draft</span>{% elif p.stock == 0 %}<span class="status status-cancelled">Sold out</span>{% else %}<span class="status status-released">Live</span>{% endif %}
+        {% if not p.images %}<br><span class="note">Needs a photo</span>{% endif %}</td>
+      <td class="num">{{ p.price|cedi }}{% if p.discount_pct %}<br><span class="note">was {{ p.compare_at|cedi }}</span>{% endif %}</td>
+      <td class="num">{{ p.stock }}</td>
+      <td class="num">{{ p.sold }}</td>
+      <td class="num"><div class="actions">
+        <a class="btn btn-quiet btn-sm" href="{{ url_for(edit_endpoint, pid=p.id) }}">Edit</a>
+        <form method="post" action="{{ url_for(remove_endpoint, pid=p.id) }}" data-confirm="Remove {{ p.name }} from the mall?">{{ csrf() }}<button class="btn btn-danger btn-sm" type="submit">Remove</button></form>
+      </div></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% else %}
+<p class="note">No products yet. The shop appears in the mall directory once it has a live product.</p>
+{% endif %}

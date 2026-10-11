@@ -1,0 +1,17 @@
+{# Shared shop detail fields. Expects data, errors #}
+{% from "_macros.html" import field, textarea, region_select with context %}
+<div class="row2">
+  {{ field('name', 'Shop name', data.name, errors, attrs='required maxlength="80"') }}
+  {{ field('phone', 'Shop phone', data.phone, errors, type='tel', placeholder='024 123 4567', attrs='inputmode="tel"') }}
+</div>
+<div class="row2">
+  {{ field('town', 'Town or city', data.town, errors, attrs='required maxlength="60"') }}
+  {{ region_select('region', data.region, errors) }}
+</div>
+{{ textarea('about', 'About the shop', data.about, errors, rows=3) }}
+<div class="row2">
+  {{ field('momo', 'MoMo payout number', data.momo, errors, type='tel', attrs='inputmode="tel"') }}
+  {{ field('ghana_card', 'Owner’s Ghana Card', data.ghana_card, errors, placeholder='GHA-123456789-0', attrs='autocomplete="off"') }}
+</div>
+{{ field('reg_no', 'Business registration no. <span class="hint">(optional)</span>', data.reg_no, errors) }}
+<label class="opt"><input type="checkbox" name="verified" value="1" {% if data.verified %}checked{% endif %}><span><b>Verified business</b><small>Shows the green tick. Tick only after checking the Ghana Card and business details.</small></span></label>

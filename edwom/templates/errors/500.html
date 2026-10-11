@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Something went wrong, Edwom Online Mall{% endblock %}
+{% block content %}
+<section class="wrap page"><div class="panel narrow momo">
+  <h1 style="font-size:1.8rem">Something went wrong on our side</h1>
+  <p class="note">Nothing was charged twice. Please try again in a moment.</p>
+  <a class="btn btn-primary" href="{{ url_for('main.index') }}">Back to the mall</a>
+</div></section>
+{% endblock %}

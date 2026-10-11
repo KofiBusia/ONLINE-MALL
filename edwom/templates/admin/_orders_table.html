@@ -1,0 +1,6 @@
+<div class="tbl-wrap"><table>
+  <thead><tr><th>Order</th><th>Date</th><th>Shop</th><th>Buyer</th><th>Payment</th><th class="num">Total</th><th>Status</th></tr></thead>
+  <tbody>{% for o in orders %}
+    <tr><td>{{ o.code }}</td><td>{{ o.created_at|dt }}</td><td><a href="{{ url_for('admin.shop_manage', sid=o.shop_id) }}">{{ o.shop.name }}</a></td><td>{{ o.checkout.name }}<br><span class="note">{{ o.checkout.phone }}</span></td><td>{{ pay_methods[o.checkout.pay_method] }}</td><td class="num">{{ o.total|cedi }}</td><td><span class="status status-{{ o.status }}">{{ o.status|status_label }}</span></td></tr>
+  {% else %}<tr><td colspan="7" class="note">No orders yet.</td></tr>{% endfor %}</tbody>
+</table></div>

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, field, textarea, image_upload with context %}
+{% block title %}Shop settings, Edwom Online Mall{% endblock %}
+{% block content %}
+<section class="wrap page">
+  <a class="back" href="{{ url_for('seller.dashboard') }}">Back to dashboard</a>
+  <h1>Shop settings</h1>
+  <p class="lede">To change your shop name, location or verification details, contact the Edwom team.</p>
+  <form class="panel form" method="post" enctype="multipart/form-data" novalidate style="max-width:760px">
+    {{ csrf() }}
+    {{ image_upload('logo', 'Shop logo', shop.logo_key, errors, 'Square image works best, at least 300 × 300 px.') }}
+    {{ image_upload('banner', 'Shop banner', shop.banner_key, errors, 'Wide image, at least 1600 × 500 px. Shown at the top of your shop.') }}
+    {{ textarea('about', 'About your shop', request.form.get('about', shop.about), errors, rows=4) }}
+    <div class="row2">
+      {{ field('phone', 'Shop phone <span class="hint">(optional)</span>', request.form.get('phone', shop.phone or ''), errors, type='tel', attrs='inputmode="tel"') }}
+      {{ field('momo', 'Mobile Money number for payouts', request.form.get('momo', shop.momo_number or ''), errors, type='tel', attrs='inputmode="tel" required') }}
+    </div>
+    <div><button class="btn btn-primary" type="submit">Save settings</button></div>
+  </form>
+</section>
+{% endblock %}

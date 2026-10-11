@@ -1,0 +1,14 @@
+{% extends "admin/_base.html" %}
+{% from "_macros.html" import pager with context %}
+{% block title %}Activity, Edwom admin{% endblock %}
+{% block admin %}
+<h1>Activity log</h1>
+<p class="lede">Every change made by admins and shop owners, newest first.</p>
+<div class="panel"><div class="tbl-wrap"><table>
+  <thead><tr><th>When (UTC)</th><th>Who</th><th>Action</th><th>Detail</th></tr></thead>
+  <tbody>{% for row in page.items %}
+    <tr><td>{{ row.created_at|dt }}</td><td>{{ row.user.email if row.user else 'System' }}</td><td><code>{{ row.action }}</code></td><td>{{ row.detail }}</td></tr>
+  {% else %}<tr><td colspan="4" class="note">No activity yet.</td></tr>{% endfor %}</tbody>
+</table></div></div>
+{{ pager(page, 'admin.activity') }}
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, field, textarea, select, region_select with context %}
+{% block title %}Sell on Edwom Online Mall{% endblock %}
+{% block content %}
+<section class="wrap page">
+  {% if done %}
+  <div class="panel narrow momo">
+    <div class="done-mark" aria-hidden="true">✓</div>
+    <h1 style="font-size:1.8rem">Application received</h1>
+    <p class="note" style="max-width:44ch;margin:8px auto 22px">The Edwom team will check your details and call you on {{ data.phone|mask_phone }}. Once approved, you’ll get a login to set up your shop and upload your products.</p>
+    <a class="btn btn-primary" href="{{ url_for('main.index') }}">Back to the mall</a>
+  </div>
+  {% else %}
+  <h1>Open your shop on Edwom</h1>
+  <p class="lede">Apply below. Our team verifies every business, sets up your shop and gives you a login to upload your products and photos.</p>
+  <div class="split">
+    <form class="panel form" method="post" novalidate>
+      {{ csrf() }}
+      <h2>Your business</h2>
+      <div class="row2">
+        {{ field('business_name', 'Business name', data.business_name, errors, placeholder='e.g. Ama’s Beads', attrs='required maxlength="80"') }}
+        {{ select('category', 'What you mainly sell', categories, data.category, errors) }}
+      </div>
+      <div class="row2">
+        {{ field('town', 'Town or city', data.town, errors, attrs='required maxlength="60"') }}
+        {{ region_select('region', data.region, errors) }}
+      </div>
+      {{ textarea('about', 'About your business <span class="hint">(optional)</span>', data.about, errors, rows=3, placeholder='What you make or sell, and what makes it special') }}
+      <h2 style="margin-top:8px">Owner and verification</h2>
+      <div class="row2">
+        {{ field('owner_name', 'Owner’s full name', data.owner_name, errors, attrs='autocomplete="name" required') }}
+        {{ field('phone', 'Phone number', data.phone, errors, type='tel', placeholder='024 123 4567', attrs='inputmode="tel" autocomplete="tel" required') }}
+      </div>
+      <div class="row2">
+        {{ field('email', 'Email', data.email, errors, type='email', hint='Your shop login will be sent to this email.', attrs='autocomplete="email" required') }}
+        {{ field('ghana_card', 'Ghana Card number', data.ghana_card, errors, hint='Used only to verify you. Never shown to buyers.', placeholder='GHA-123456789-0', attrs='autocomplete="off" required') }}
+      </div>
+      {{ field('reg_no', 'Business registration no. <span class="hint">(optional)</span>', data.reg_no, errors, hint='Registered businesses are verified faster.', placeholder='ORC registration number') }}
+      <label class="opt"><input type="checkbox" name="agree" value="1" {% if request.form.get('agree') %}checked{% endif %}>
+        <span>I agree to Edwom’s seller terms, including the {{ commission_pct }}% commission on completed sales and the buyer-protection policy.</span></label>
+      {% if errors.agree %}<span class="err">{{ errors.agree }}</span>{% endif %}
+      <div><button class="btn btn-primary" type="submit">Send application</button></div>
+    </form>
+    <aside class="panel">
+      <h2>What it costs</h2>
+      <p class="note">No sign-up fee and no monthly fee to start.</p>
+      <ul class="terms">
+        <li><b>{{ commission_pct }}% commission</b>Only charged when a buyer confirms delivery.</li>
+        <li><b>Payouts to MoMo</b>Released after the buyer confirms, or automatically {{ auto_release_hours }} hours after delivery.</li>
+        <li><b>Your own storefront</b>Logo, banner and up to {{ max_photos }} photos per product.</li>
+        <li><b>Verified tick</b>Shown once Edwom checks your Ghana Card and business details.</li>
+      </ul>
+    </aside>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

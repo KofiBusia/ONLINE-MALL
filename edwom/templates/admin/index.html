@@ -1,0 +1,24 @@
+{% extends "admin/_base.html" %}
+{% block title %}Admin overview, Edwom{% endblock %}
+{% block admin %}
+<h1>Overview</h1>
+<p class="lede">The health of the mall at a glance.</p>
+<div class="stats">
+  <div class="stat"><span>Active shops</span><strong>{{ stats.shops }}</strong></div>
+  <div class="stat"><span>Live products</span><strong>{{ stats.products }}</strong></div>
+  <div class="stat"><span>Orders</span><strong>{{ stats.orders }}</strong></div>
+  <div class="stat"><span>Held in escrow</span><strong>{{ stats.held|cedi }}</strong></div>
+  <div class="stat"><span>Paid to shops</span><strong>{{ stats.released|cedi }}</strong></div>
+  <div class="stat"><span>Commission earned</span><strong>{{ stats.commission|cedi }}</strong></div>
+</div>
+{% if stats.no_photos %}<div class="flash" style="margin-bottom:18px">{{ stats.no_photos }} product{{ '' if stats.no_photos == 1 else 's' }} still {{ 'has' if stats.no_photos == 1 else 'have' }} no photo. Products with photos sell far better. <a href="{{ url_for('admin.shops') }}">Open shops</a></div>{% endif %}
+{% if nav_counts.applications %}<div class="flash" style="margin-bottom:18px">{{ nav_counts.applications }} new shop application{{ '' if nav_counts.applications == 1 else 's' }} waiting. <a href="{{ url_for('admin.applications') }}">Review applications</a></div>{% endif %}
+<div class="panel">
+  <h2>Problems reported by buyers</h2>
+  {% if disputes %}{% include "admin/_disputes.html" %}{% else %}<p class="note">No open problems.</p>{% endif %}
+</div>
+<div class="panel">
+  <div class="order-top"><h2>Latest orders</h2><a href="{{ url_for('admin.orders') }}">All orders</a></div>
+  {% with orders=recent %}{% include "admin/_orders_table.html" %}{% endwith %}
+</div>
+{% endblock %}

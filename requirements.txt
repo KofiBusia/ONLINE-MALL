@@ -1,0 +1,15 @@
+Flask==3.0.3
+Werkzeug==3.0.3
+Flask-SQLAlchemy==3.1.1
+SQLAlchemy==2.0.31
+Flask-Migrate==4.0.7
+alembic==1.13.2
+Flask-Login==0.6.3
+Flask-WTF==1.2.1
+Flask-Limiter==3.8.0
+Pillow==10.4.0
+gunicorn==22.0.0
+psycopg[binary]==3.2.1
+requests==2.32.3
+python-dotenv==1.0.1
+pytest==8.3.2

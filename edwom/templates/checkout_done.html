@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Order placed, Edwom Online Mall{% endblock %}
+{% block content %}
+<section class="wrap page">
+  <div class="panel narrow momo">
+    <div class="done-mark" aria-hidden="true">✓</div>
+    <h1 style="font-size:1.8rem">Order {{ co.code }} placed</h1>
+    <p class="note" style="max-width:42ch;margin:8px auto 22px">
+      {% if co.pay_method == 'cod' %}Have {{ co.total|cedi }} ready for the rider.{% else %}{{ co.total|cedi }} is held by Edwom and released to the shop after you confirm delivery.{% endif %}
+      Keep your order number and phone number to track it from any device.
+    </p>
+    <a class="btn btn-primary" href="{{ url_for('main.checkout_detail', code=co.code) }}">Track my order</a>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, logo with context %}
+{% block title %}{{ shop.name }} dashboard, Edwom Online Mall{% endblock %}
+{% block content %}
+<section class="wrap page">
+  <div class="dash-head">
+    {{ logo(shop, 'logo-lg') }}
+    <div>
+      <h1>{{ shop.name }}</h1>
+      <p class="lede" style="margin:0">
+        {{ shop.town }}, {{ shop.region }}.
+        {% if shop.verified %}✓ Verified business.{% else %}Verification in progress.{% endif %}
+        {% if shop.momo_number %}Payouts go to {{ shop.momo_number|network }} {{ shop.momo_number|mask_phone }}.{% else %}<strong>Add your MoMo payout number in shop settings.</strong>{% endif %}
+      </p>
+    </div>
+    <div class="dash-actions">
+      <a class="btn btn-primary" href="{{ url_for('seller.product_new') }}">Add a product</a>
+      <a class="btn btn-quiet" href="{{ url_for('seller.settings') }}">Logo, banner and details</a>
+      <a class="btn btn-quiet" href="{{ url_for('main.shop', slug=shop.slug) }}">View my shop</a>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><span>Live products</span><strong>{{ products|selectattr('published')|list|length }}</strong></div>
+    <div class="stat"><span>Orders to fulfil</span><strong>{{ s.open }}</strong></div>
+    <div class="stat"><span>Held until delivery</span><strong>{{ s.held|cedi }}</strong></div>
+    <div class="stat"><span>Paid out to MoMo</span><strong>{{ s.payout|cedi }}</strong></div>
+    <div class="stat"><span>Edwom commission ({{ commission_pct }}%)</span><strong>{{ s.commission|cedi }}</strong></div>
+  </div>
+
+  <div class="panel" id="orders">
+    <h2>Orders</h2>
+    {% if s.orders %}
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Order</th><th>Items</th><th>Deliver to</th><th class="num">Value</th><th>Status</th><th class="num"><span class="sr">Action</span></th></tr></thead>
+      <tbody>
+      {% for o in s.orders %}
+        <tr>
+          <td>{{ o.code }}<br><span class="note">{{ o.created_at|dt }}</span></td>
+          <td>{% for i in o.items %}{{ i.name }} × {{ i.qty }}<br>{% endfor %}</td>
+          <td>{{ o.checkout.name }}<br><span class="note">{{ o.checkout.phone }}, {{ o.checkout.gps }}, {{ o.checkout.region }}{% if o.checkout.landmark %}. {{ o.checkout.landmark }}{% endif %}</span>
+            {% if o.checkout.pay_method == 'cod' and o.status not in ['released', 'cancelled'] %}<br><span class="status status-awaiting_payment">Collect {{ o.total|cedi }} on delivery</span>{% endif %}</td>
+          <td class="num">{{ o.subtotal|cedi }}</td>
+          <td><span class="status status-{{ o.status }}">{{ o.status|status_label }}</span>{% if o.note %}<br><span class="note">{{ o.note }}</span>{% endif %}</td>
+          <td class="num"><div class="actions">
+            {% if next_status.get(o.status) %}
+              <form method="post" action="{{ url_for('seller.order_advance', code=o.code) }}">{{ csrf() }}<button class="btn btn-primary btn-sm" type="submit">{{ action_labels[o.status] }}</button></form>
+            {% endif %}
+            {% if o.status == 'placed' %}
+              <form method="post" action="{{ url_for('seller.order_cancel', code=o.code) }}" data-confirm="Cancel this order? The buyer will be refunded.">{{ csrf() }}<button class="btn btn-danger btn-sm" type="submit">Cancel</button></form>
+            {% endif %}
+          </div></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    {% else %}
+      <p class="note">Orders appear here as soon as a buyer pays or chooses pay on delivery.</p>
+    {% endif %}
+  </div>
+
+  <div class="panel" id="products">
+    <div class="order-top"><h2>Products</h2><a class="btn btn-primary btn-sm" href="{{ url_for('seller.product_new') }}">Add a product</a></div>
+    {% with edit_endpoint='seller.product_edit', remove_endpoint='seller.product_remove' %}{% include "shared/_products_table.html" %}{% endwith %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, tick, product_grid, pic, price_tag with context %}
+{% block title %}{{ p.name }} from {{ p.shop.name }}, Edwom Online Mall{% endblock %}
+{% block meta %}<meta name="description" content="{{ p.name }} from {{ p.shop.name }}, {{ p.shop.town }}. {{ p.price|cedi }}. {{ (p.description or '')[:120] }}">
+<meta property="og:type" content="product">
+<meta property="og:title" content="{{ p.name }} | {{ p.price|cedi }}">
+<meta property="og:description" content="Sold by {{ p.shop.name }} on Edwom Online Mall">
+{% if p.cover_key %}<meta property="og:image" content="{{ url_for('main.media', key=p.cover_key, size='full', _external=True) }}">{% endif %}{% endblock %}
+{% block content %}
+<section class="wrap page">
+  {% if not p.published %}<div class="flash flash-error" style="margin-bottom:16px">Draft preview. Buyers can’t see this product until it’s published.</div>{% endif %}
+  <div class="pd">
+    <div class="gallery" data-gallery>
+      <div class="gallery-main">
+        {% if p.images %}
+          <img id="gallery-main" src="{{ media_url(p.images[0].key, 'full') }}" alt="{{ p.name }}" width="{{ p.images[0].width }}" height="{{ p.images[0].height }}" decoding="async">
+        {% else %}{{ pic(None, p.icon, p.category, cls='gallery-fallback') }}{% endif %}
+        {% if p.discount_pct %}<span class="sale-badge">−{{ p.discount_pct }}%</span>{% endif %}
+      </div>
+      {% if p.images|length > 1 %}
+      <div class="thumbs" role="list">
+        {% for m in p.images %}
+        <a role="listitem" class="thumb {% if loop.first %}is-active{% endif %}" href="{{ media_url(m.key, 'full') }}" data-full="{{ media_url(m.key, 'full') }}" aria-label="Photo {{ loop.index }} of {{ p.images|length }}">
+          <img src="{{ media_url(m.key, 'thumb') }}" alt="" loading="lazy"></a>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    <div class="pd-body">
+      <a class="back" href="{{ url_for('main.shop', slug=p.shop.slug) }}">Sold by {{ p.shop.name }}{{ tick(p.shop) }}, {{ p.shop.town }}</a>
+      <h1>{{ p.name }}</h1>
+      {{ price_tag(p, 'price price-lg') }}
+      <div class="meta">
+        <span>{% if p.rating %}★ {{ '%.1f'|format(p.rating) }}{% else %}New product{% endif %}</span>
+        <span>{{ p.sold }} sold</span>
+        <span>{% if p.stock > 5 %}In stock{% elif p.stock > 0 %}Only {{ p.stock }} left{% else %}Sold out{% endif %}</span>
+        <span>{{ p.category|cat_label }}</span>
+      </div>
+      {% if p.stock > 0 and p.published %}
+      <form class="buy-row" method="post" action="{{ url_for('main.cart_add', pid=p.id) }}">
+        {{ csrf() }}
+        <div class="field"><label for="qty">Quantity</label><input class="qty-input" id="qty" name="qty" type="number" min="1" max="{{ [p.stock, 99]|min }}" value="1"></div>
+        <button class="btn btn-quiet" type="submit">Add to cart</button>
+        <button class="btn btn-primary" type="submit" name="go" value="cart">Buy now</button>
+      </form>
+      {% endif %}
+      <div class="protect">Delivery to {{ current_region }}: {{ fee|cedi }} from this shop. Your payment is held by Edwom until you confirm delivery.</div>
+      {% if p.description %}<div class="prose">{% for para in p.description.split('\n') if para.strip() %}<p>{{ para }}</p>{% endfor %}</div>{% endif %}
+      {% if p.spec_rows %}
+      <table class="specs"><caption class="sr">Product details</caption>
+        {% for k, v in p.spec_rows %}<tr><th scope="row">{{ k }}</th><td>{{ v }}</td></tr>{% endfor %}
+        {% if p.sku %}<tr><th scope="row">SKU</th><td>{{ p.sku }}</td></tr>{% endif %}
+      </table>
+      {% endif %}
+    </div>
+  </div>
+  {% if more %}
+  <div class="sec-h" style="margin-top:56px"><h2>More from {{ p.shop.name }}</h2></div>
+  {{ product_grid(more) }}
+  {% endif %}
+</section>
+{% endblock %}

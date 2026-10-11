@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, field, textarea, select with context %}
+{% block title %}{{ 'Edit' if product else 'Add' }} product, {{ shop.name }}{% endblock %}
+{% block content %}
+<section class="wrap page">
+  <a class="back" href="{{ back_url }}">Back to {{ shop.name }}</a>
+  <h1>{{ 'Edit product' if product else 'Add a product' }}</h1>
+  <p class="lede">Good photos sell. Use natural light, a plain background and show the product from a few angles.</p>
+  {% if errors %}<div class="flash flash-error" style="margin-bottom:16px" role="alert">Check the highlighted fields. Nothing has been saved yet.</div>{% endif %}
+
+  <form class="pf" method="post" action="{{ action_url }}" enctype="multipart/form-data" novalidate>
+    {{ csrf() }}
+    <div class="pf-main">
+      <section class="panel {% if errors.photos %}bad-panel{% endif %}">
+        <h2>Photos</h2>
+        <p class="note">Up to {{ max_photos }} photos, JPG, PNG or WebP, each up to {{ max_photo_mb }} MB. Choose which one is the cover; it appears in the mall.</p>
+        {% if product and product.images %}
+        <div class="photo-grid">
+          {% for m in product.images %}
+          <div class="photo">
+            <img src="{{ media_url(m.key) }}" alt="Photo {{ loop.index }}">
+            <label class="photo-opt"><input type="radio" name="cover" value="{{ m.key }}" {% if loop.first %}checked{% endif %}> Cover</label>
+            <label class="photo-opt danger"><input type="checkbox" name="remove_photo" value="{{ m.key }}"> Remove</label>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+        <label class="dropzone" for="photos">
+          <span class="dz-title">Add photos</span>
+          <span class="note">Tap to choose from your phone or computer. You can pick several at once.</span>
+          <input id="photos" type="file" name="photos" multiple accept="image/jpeg,image/png,image/webp" data-photo-input>
+        </label>
+        <div class="photo-grid" id="new-photos" aria-live="polite"></div>
+        {% if errors.photos %}<p class="err">{{ errors.photos }}</p>{% endif %}
+      </section>
+
+      <section class="panel">
+        <h2>Details</h2>
+        <div class="form">
+          {{ field('name', 'Product name', data.name, errors, placeholder='e.g. Handwoven kente stole', attrs='required maxlength="90"') }}
+          {{ select('category', 'Category', categories, data.category, errors) }}
+          {{ textarea('description', 'Description', data.description, errors, rows=5, maxlength=4000, placeholder='What it is, how it is made, how to use or care for it') }}
+          {{ textarea('specs', 'Specifications <span class="hint">(optional, one per line)</span>', data.specs, errors, rows=4, maxlength=2000, hint='Format each line as Label: value, e.g. Material: 100% cotton', placeholder='Material: 100% cotton') }}
+        </div>
+      </section>
+    </div>
+
+    <aside class="pf-side">
+      <section class="panel">
+        <h2>Price and stock</h2>
+        <div class="form">
+          {{ field('price', 'Selling price (GH₵)', data.price, errors, placeholder='120.00', attrs='inputmode="decimal" required') }}
+          {{ field('compare_at', 'Old price (GH₵) <span class="hint">(optional)</span>', data.compare_at, errors, hint='Shows a discount badge when higher than the selling price.', attrs='inputmode="decimal"') }}
+          {{ field('stock', 'Quantity in stock', data.stock, errors, type='number', attrs='min="0" step="1" required') }}
+          {{ field('sku', 'SKU or item code <span class="hint">(optional)</span>', data.sku, errors, attrs='maxlength="40"') }}
+        </div>
+      </section>
+      <section class="panel">
+        <h2>Visibility</h2>
+        <fieldset>
+          <legend class="sr">Visibility</legend>
+          <label class="opt"><input type="radio" name="published" value="1" {% if data.published %}checked{% endif %}><span><b>Live in the mall</b><small>Buyers can find and order it.</small></span></label>
+          <label class="opt"><input type="radio" name="published" value="0" {% if not data.published %}checked{% endif %}><span><b>Draft</b><small>Hidden from buyers until you publish.</small></span></label>
+        </fieldset>
+      </section>
+      <div class="pf-actions">
+        <button class="btn btn-primary" type="submit">{{ 'Save changes' if product else 'Save product' }}</button>
+        {% if product %}<a class="btn btn-quiet" href="{{ url_for('main.product', pid=product.id) }}" target="_blank" rel="noopener">Preview</a>{% endif %}
+      </div>
+    </aside>
+  </form>
+</section>
+{% endblock %}

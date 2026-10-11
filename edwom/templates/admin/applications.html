@@ -1,0 +1,26 @@
+{% extends "admin/_base.html" %}
+{% from "_macros.html" import csrf with context %}
+{% block title %}Applications, Edwom admin{% endblock %}
+{% block admin %}
+<h1>Shop applications</h1>
+<p class="lede">Businesses that applied through “Sell on Edwom”. Approving opens a prefilled new-shop form.</p>
+<div class="chips" style="margin-bottom:16px">
+  {% for key, label in application_statuses.items() %}<a class="chip" href="{{ url_for('admin.applications', status=key) }}" {% if status == key %}aria-current="true"{% endif %}>{{ label }}</a>{% endfor %}
+</div>
+{% for a in rows %}
+<article class="panel">
+  <div class="order-top"><h2>{{ a.business_name }}</h2><span class="note">{{ a.created_at|dt }}</span></div>
+  <p style="margin:6px 0">{{ cat_labels.get(a.category, a.category) }}, {{ a.town }}, {{ a.region }}</p>
+  {% if a.about %}<p class="note">{{ a.about }}</p>{% endif %}
+  <p class="note">{{ a.owner_name }}: {{ a.phone }}, {{ a.email }}. Ghana Card {{ a.ghana_card }}{% if a.reg_no %}, ORC {{ a.reg_no }}{% endif %}.</p>
+  {% if a.status == 'new' %}
+  <div class="order-actions">
+    <a class="btn btn-primary btn-sm" href="{{ url_for('admin.shop_new', application=a.id) }}">Approve and set up shop</a>
+    <form method="post" action="{{ url_for('admin.application_decline', aid=a.id) }}" data-confirm="Decline this application?">{{ csrf() }}<button class="btn btn-danger btn-sm">Decline</button></form>
+  </div>
+  {% elif a.shop_id %}<a href="{{ url_for('admin.shop_manage', sid=a.shop_id) }}">Open the shop</a>{% endif %}
+</article>
+{% else %}
+<div class="panel"><p class="note" style="margin:0">Nothing here.</p></div>
+{% endfor %}
+{% endblock %}

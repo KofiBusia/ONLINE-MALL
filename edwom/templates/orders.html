@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, field with context %}
+{% block title %}Your orders, Edwom Online Mall{% endblock %}
+{% block content %}
+<section class="wrap page">
+  <h1>Your orders</h1>
+  <p class="lede">Orders you place on this device{% if current_user.is_authenticated %} or with your account{% endif %} show here. Track any other order with its number and phone.</p>
+  <div class="split">
+    <div>
+      {% for co in checkouts %}
+      <a class="panel order" style="display:block;text-decoration:none" href="{{ url_for('main.checkout_detail', code=co.code) }}">
+        <div class="order-top"><h2>Order {{ co.code }}</h2><span class="note">{{ co.created_at|dt }}</span></div>
+        <p class="note" style="margin:6px 0 10px">{{ co.orders|length }} shop{{ '' if co.orders|length == 1 else 's' }}. Total {{ co.total|cedi }}.</p>
+        {% for o in co.orders %}<span class="status status-{{ o.status }}" style="margin:0 6px 6px 0">{{ o.shop.name }}: {{ o.status|status_label }}</span>{% endfor %}
+      </a>
+      {% else %}
+      <div class="panel"><p class="note" style="margin:0">No orders yet. <a href="{{ url_for('main.index') }}#shop">Browse the shops</a></p></div>
+      {% endfor %}
+    </div>
+    <form class="panel form" method="post" action="{{ url_for('main.track') }}">
+      {{ csrf() }}
+      <h2>Track an order</h2>
+      {{ field('code', 'Order number', '', {}, placeholder='EDW-7K2QPF', attrs='required') }}
+      {{ field('phone', 'Phone number used at checkout', '', {}, type='tel', placeholder='024 123 4567', attrs='required inputmode="tel"') }}
+      <button class="btn btn-primary" type="submit">Find my order</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

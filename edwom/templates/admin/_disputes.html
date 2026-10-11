@@ -1,0 +1,11 @@
+{% from "_macros.html" import csrf with context %}
+<div class="tbl-wrap"><table>
+  <thead><tr><th>Order</th><th>Shop</th><th>Buyer</th><th>Problem</th><th class="num">Value</th><th class="num">Resolve</th></tr></thead>
+  <tbody>{% for o in disputes %}
+    <tr><td>{{ o.code }}</td><td>{{ o.shop.name }}</td><td>{{ o.checkout.name }}<br><span class="note">{{ o.checkout.phone }}</span></td><td>{{ o.note }}</td><td class="num">{{ o.subtotal|cedi }}</td>
+      <td class="num"><div class="actions">
+        <form method="post" action="{{ url_for('admin.order_resolve', code=o.code) }}">{{ csrf() }}<input type="hidden" name="action" value="release"><input type="hidden" name="next" value="{{ request.path }}"><button class="btn btn-quiet btn-sm">Pay the shop</button></form>
+        <form method="post" action="{{ url_for('admin.order_resolve', code=o.code) }}" data-confirm="Refund the buyer and cancel this order?">{{ csrf() }}<input type="hidden" name="action" value="refund"><input type="hidden" name="next" value="{{ request.path }}"><button class="btn btn-danger btn-sm">Refund buyer</button></form>
+      </div></td></tr>
+  {% endfor %}</tbody>
+</table></div>

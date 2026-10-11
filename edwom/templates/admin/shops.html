@@ -1,0 +1,25 @@
+{% extends "admin/_base.html" %}
+{% from "_macros.html" import csrf, logo with context %}
+{% block title %}Shops, Edwom admin{% endblock %}
+{% block admin %}
+<div class="order-top"><h1>Shops</h1><a class="btn btn-primary" href="{{ url_for('admin.shop_new') }}">New shop</a></div>
+<form class="admin-search" method="get"><label class="sr" for="sq">Search shops</label><input id="sq" name="q" value="{{ q }}" placeholder="Search by name, town or region"><button class="btn btn-quiet btn-sm">Search</button></form>
+<div class="panel">
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Shop</th><th>Location</th><th>Owner login</th><th class="num">Products</th><th>Status</th><th class="num"><span class="sr">Actions</span></th></tr></thead>
+    <tbody>{% for sh in shops %}
+      <tr>
+        <td><div class="prow">{{ logo(sh, 'logo-sm') }}<div><a href="{{ url_for('admin.shop_manage', sid=sh.id) }}"><b>{{ sh.name }}</b></a><br><span class="note">Since {{ sh.since }}</span></div></div></td>
+        <td>{{ sh.town }}, {{ sh.region }}</td>
+        <td>{% if sh.owner %}{{ sh.owner.name }}<br><span class="note">{{ sh.owner.email }}{% if sh.owner.must_change_password %}, not logged in yet{% endif %}</span>{% else %}<span class="note">No login (demo shop)</span>{% endif %}</td>
+        <td class="num">{{ counts.get(sh.id, 0) }}</td>
+        <td>{% if sh.suspended %}<span class="status status-cancelled">Suspended</span>{% elif sh.verified %}<span class="status status-released">Verified</span>{% else %}<span class="status status-awaiting_payment">Not verified</span>{% endif %}</td>
+        <td class="num"><div class="actions">
+          <a class="btn btn-primary btn-sm" href="{{ url_for('admin.shop_manage', sid=sh.id) }}">Manage</a>
+          <a class="btn btn-quiet btn-sm" href="{{ url_for('admin.product_new', sid=sh.id) }}">Add product</a>
+        </div></td>
+      </tr>
+    {% else %}<tr><td colspan="6" class="note">No shops found.</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div>
+{% endblock %}

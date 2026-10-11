@@ -1,0 +1,148 @@
+{% macro csrf() %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endmacro %}
+
+{% macro tick(shop) %}{% if shop.verified %} <span class="tick" title="Verified business">✓</span>{% endif %}{% endmacro %}
+
+{# Square product picture: photo when available, otherwise the category icon on a woven tile #}
+{% macro pic(key, icon, category, cls='', size='thumb', alt='') %}
+{% if key %}<img class="{{ cls }}" src="{{ media_url(key, size) }}" alt="{{ alt }}" loading="lazy" decoding="async">
+{% else %}<span class="{{ cls }} t-{{ category }} noimg" aria-hidden="true">{{ icon }}</span>{% endif %}
+{% endmacro %}
+
+{% macro price_tag(p, cls='price') %}
+<span class="price-wrap"><strong class="{{ cls }}">{{ p.price|cedi }}</strong>{% if p.discount_pct %}<s class="was">{{ p.compare_at|cedi }}</s><span class="off">−{{ p.discount_pct }}%</span>{% endif %}</span>
+{% endmacro %}
+
+{% macro product_card(p) %}
+<article class="card">
+  <a class="tile" href="{{ url_for('main.product', pid=p.id) }}" aria-label="{{ p.name }}">{{ pic(p.cover_key, p.icon, p.category, alt=p.name) }}</a>
+  <div class="card-body">
+    <h3><a class="linklike" href="{{ url_for('main.product', pid=p.id) }}">{{ p.name }}</a></h3>
+    <a class="vendor-link" href="{{ url_for('main.shop', slug=p.shop.slug) }}">{{ p.shop.name }}{{ tick(p.shop) }}</a>
+    <div class="meta"><span>{% if p.rating %}★ {{ '%.1f'|format(p.rating) }}{% else %}New{% endif %}</span><span>{{ p.shop.town }}</span></div>
+    <div class="card-foot">
+      {{ price_tag(p) }}
+      <form method="post" action="{{ url_for('main.cart_add', pid=p.id) }}">
+        {{ csrf() }}<input type="hidden" name="next" value="{{ request.full_path }}">
+        {% if p.stock > 0 %}<button class="btn-add" type="submit" aria-label="Add {{ p.name }} to cart">Add</button>
+        {% else %}<button class="btn-add" type="button" disabled>Sold out</button>{% endif %}
+      </form>
+    </div>
+  </div>
+</article>
+{% endmacro %}
+
+{% macro logo(shop, cls='logo-badge') %}
+{% if shop.logo_key %}<img class="{{ cls }}" src="{{ media_url(shop.logo_key) }}" alt="" loading="lazy">
+{% else %}<span class="{{ cls }} logo-initials" aria-hidden="true">{{ shop.name[:1] }}</span>{% endif %}
+{% endmacro %}
+
+{% macro shop_card(s, cat='all') %}
+{% set a = awnings[s.shop.awning % (awnings|length)] %}
+{% set href = url_for('main.shop', slug=s.shop.slug, cat=(cat if cat != 'all' else None)) %}
+<article class="shop" style="--a1:{{ a[0] }};--a2:{{ a[1] }}">
+  <div class="awning" aria-hidden="true"></div>
+  <a class="window" href="{{ href }}" aria-label="Enter {{ s.shop.name }}">
+    {% for p in s.preview %}{{ pic(p.cover_key, p.icon, p.category, cls='win-pic', alt='') }}{% endfor %}
+  </a>
+  <div class="shop-body">
+    <div class="shop-title">{{ logo(s.shop) }}<h3><a class="linklike" href="{{ href }}">{{ s.shop.name }}</a>{{ tick(s.shop) }}</h3></div>
+    <div class="meta"><span>{{ s.shop.town }}, {{ s.shop.region }}</span></div>
+    <div class="shop-cats">{% for c in s.cats %}<span>{{ c }}</span>{% endfor %}</div>
+    <div class="card-foot"><span class="note">{{ s.count }} product{{ '' if s.count == 1 else 's' }}</span><a class="btn-add" href="{{ href }}">Enter shop</a></div>
+  </div>
+</article>
+{% endmacro %}
+
+{% macro toolbar(endpoint, cat, sort, q='', kw={}) %}
+<div class="toolbar">
+  <div class="chips" role="group" aria-label="Categories">
+    <a class="chip" href="{{ url_for(endpoint, q=(q or None), sort=(sort if sort != 'popular' else None), **kw) }}" {% if cat == 'all' %}aria-current="true"{% endif %}>All</a>
+    {% for cid, label in categories %}
+    <a class="chip" href="{{ url_for(endpoint, cat=cid, q=(q or None), sort=(sort if sort != 'popular' else None), **kw) }}" {% if cat == cid %}aria-current="true"{% endif %}>{{ label }}</a>
+    {% endfor %}
+  </div>
+  <form class="sort" method="get" action="{{ url_for(endpoint, **kw) }}">
+    {% if cat != 'all' %}<input type="hidden" name="cat" value="{{ cat }}">{% endif %}
+    {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+    <label for="sort">Sort products</label>
+    <select id="sort" name="sort" data-autosubmit>
+      {% for key, label in sorts.items() %}<option value="{{ key }}" {% if key == sort %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <noscript><button class="btn-add" type="submit">Apply</button></noscript>
+  </form>
+</div>
+{% endmacro %}
+
+{% macro product_grid(products) %}
+<div class="grid">
+  {% for p in products %}{{ product_card(p) }}
+  {% else %}<div class="empty"><b>No products match yet</b>Try another word or category.</div>{% endfor %}
+</div>
+{% endmacro %}
+
+{% macro pager(page, endpoint, kw={}) %}
+{% if page.pages > 1 %}
+<nav class="pager" aria-label="Pages">
+  {% if page.has_prev %}<a class="btn btn-quiet btn-sm" href="{{ url_for(endpoint, page=page.prev_num, **kw) }}">Previous</a>{% endif %}
+  <span class="note">Page {{ page.page }} of {{ page.pages }}</span>
+  {% if page.has_next %}<a class="btn btn-quiet btn-sm" href="{{ url_for(endpoint, page=page.next_num, **kw) }}">Next</a>{% endif %}
+</nav>
+{% endif %}
+{% endmacro %}
+
+{% macro track(order) %}
+{% if order.status in ['disputed', 'cancelled', 'awaiting_payment'] %}
+  <p><span class="status status-{{ order.status }}">{{ order.status|status_label }}</span>{% if order.note %} <span class="note">{{ order.note }}</span>{% endif %}</p>
+{% else %}
+  <ol class="track" aria-label="Order progress">
+    {% for st in status_flow %}<li class="{% if loop.index0 < order.step %}done{% elif loop.index0 == order.step %}now{% endif %}">{{ st|status_label }}</li>{% endfor %}
+  </ol>
+{% endif %}
+{% endmacro %}
+
+{% macro field(name, label, value='', errors={}, type='text', hint='', placeholder='', attrs='') %}
+<div class="field {% if errors.get(name) %}bad{% endif %}">
+  <label for="f-{{ name }}">{{ label|safe }}</label>
+  <input id="f-{{ name }}" name="{{ name }}" type="{{ type }}" value="{{ value if value is not none else '' }}" placeholder="{{ placeholder }}" {{ attrs|safe }}>
+  {% if errors.get(name) %}<span class="err">{{ errors[name] }}</span>{% elif hint %}<span class="hint">{{ hint }}</span>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro textarea(name, label, value='', errors={}, rows=4, hint='', placeholder='', maxlength=600) %}
+<div class="field {% if errors.get(name) %}bad{% endif %}">
+  <label for="f-{{ name }}">{{ label|safe }}</label>
+  <textarea id="f-{{ name }}" name="{{ name }}" rows="{{ rows }}" maxlength="{{ maxlength }}" placeholder="{{ placeholder }}">{{ value or '' }}</textarea>
+  {% if errors.get(name) %}<span class="err">{{ errors[name] }}</span>{% elif hint %}<span class="hint">{{ hint }}</span>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro select(name, label, options, selected, errors={}) %}
+<div class="field {% if errors.get(name) %}bad{% endif %}">
+  <label for="f-{{ name }}">{{ label }}</label>
+  <select id="f-{{ name }}" name="{{ name }}">{% for value, text in options %}<option value="{{ value }}" {% if value == selected %}selected{% endif %}>{{ text }}</option>{% endfor %}</select>
+  {% if errors.get(name) %}<span class="err">{{ errors[name] }}</span>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro region_select(name, selected, errors={}, label='Region') %}
+<div class="field {% if errors.get(name) %}bad{% endif %}">
+  <label for="f-{{ name }}">{{ label }}</label>
+  <select id="f-{{ name }}" name="{{ name }}">{% for r in regions %}<option {% if r == selected %}selected{% endif %}>{{ r }}</option>{% endfor %}</select>
+  {% if errors.get(name) %}<span class="err">{{ errors[name] }}</span>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro image_upload(kind, label, current_key, errors={}, hint='') %}
+<div class="field {% if errors.get(kind) %}bad{% endif %}">
+  <span class="label">{{ label }}</span>
+  <div class="img-row">
+    {% if current_key %}<img class="img-current img-{{ kind }}" src="{{ media_url(current_key) }}" alt="Current {{ kind }}">{% else %}<span class="img-current img-{{ kind }} img-empty">No {{ kind }} yet</span>{% endif %}
+    <div class="img-actions">
+      <label class="btn btn-quiet btn-sm file-btn">Choose image<input type="file" name="{{ kind }}" accept="image/jpeg,image/png,image/webp" data-preview="{{ kind }}"></label>
+      {% if current_key %}<label class="check"><input type="checkbox" name="remove_{{ kind }}" value="1"> Remove</label>{% endif %}
+      <span class="hint" data-preview-name="{{ kind }}">{{ hint }}</span>
+    </div>
+  </div>
+  {% if errors.get(kind) %}<span class="err">{{ errors[kind] }}</span>{% endif %}
+</div>
+{% endmacro %}

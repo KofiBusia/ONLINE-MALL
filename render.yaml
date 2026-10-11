@@ -1,0 +1,36 @@
+# Render Blueprint: web service + PostgreSQL.
+# Render dashboard > New > Blueprint > choose this GitHub repository.
+services:
+  - type: web
+    name: edwom-online-mall
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    # Applies database migrations, ensures the super admin exists, then starts the web server.
+    startCommand: flask --app wsgi db upgrade && flask --app wsgi setup && gunicorn wsgi:app -c gunicorn.conf.py
+    healthCheckPath: /healthz
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.4
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: edwom-db
+          property: connectionString
+      - key: SEED_DEMO
+        value: "1"
+      - key: COMMISSION_RATE
+        value: "0.08"
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
+
+databases:
+  - name: edwom-db
+    plan: free
+    databaseName: edwom
+    user: edwom

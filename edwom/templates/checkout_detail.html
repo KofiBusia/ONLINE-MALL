@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, track, tick, pic with context %}
+{% block title %}Order {{ co.code }}, Edwom Online Mall{% endblock %}
+{% block content %}
+<section class="wrap page">
+  <a class="back" href="{{ url_for('main.orders') }}">All orders</a>
+  <h1>Order {{ co.code }}</h1>
+  <p class="lede">Placed {{ co.created_at|dt }} UTC. Delivering to {{ co.name }}, {{ co.gps }}, {{ co.region }}.
+    Paid by {{ pay_methods[co.pay_method] }}{% if co.pay_status == 'pending' %} (payment not completed){% endif %}. Total {{ co.total|cedi }}.</p>
+
+  {% if co.pay_status == 'pending' %}
+  <div class="panel" style="margin-bottom:18px">
+    <h2>Finish paying to send this order to the shops</h2>
+    <p class="note">Nothing has been charged yet.</p>
+    <a class="btn btn-primary" href="{{ url_for('main.pay', code=co.code) }}">Pay {{ co.total|cedi }}</a>
+  </div>
+  {% endif %}
+
+  {% for o in co.orders %}
+  <article class="panel order">
+    <div class="order-top">
+      <h2>{{ o.shop.name }}{{ tick(o.shop) }}</h2>
+      <span class="note">{{ o.code }}</span>
+    </div>
+    <ul class="lines">
+      {% for i in o.items %}
+      <li>{{ pic(i.image_key, i.icon, i.category, cls='mini sm') }}<span>{{ i.name }} × {{ i.qty }}</span><strong>{{ i.line_total|cedi }}</strong></li>
+      {% endfor %}
+    </ul>
+    <div class="note">Items {{ o.subtotal|cedi }}, delivery {{ o.delivery|cedi }}.</div>
+    {{ track(o) }}
+    <div class="order-actions">
+      {% if o.status in ['shipped', 'delivered'] %}
+        <form method="post" action="{{ url_for('main.order_received', code=o.code) }}" data-confirm="Confirm you received this order? The shop will be paid.">
+          {{ csrf() }}<button class="btn btn-primary" type="submit">Confirm I received it</button>
+        </form>
+      {% endif %}
+      {% if o.status in ['placed', 'confirmed', 'shipped', 'delivered'] %}
+        <details>
+          <summary>Report a problem</summary>
+          <form class="form" method="post" action="{{ url_for('main.order_problem', code=o.code) }}">
+            {{ csrf() }}
+            <div class="field"><label for="note-{{ o.id }}">What went wrong?</label>
+              <textarea id="note-{{ o.id }}" name="note" rows="3" maxlength="500" placeholder="Wrong item, damaged, not delivered…"></textarea></div>
+            <button class="btn btn-danger btn-sm" type="submit">Send to Edwom</button>
+          </form>
+        </details>
+      {% endif %}
+      {% if o.status == 'delivered' %}<span class="note">Payment is released automatically {{ auto_release_hours }} hours after delivery if you don’t report a problem.</span>{% endif %}
+      {% if o.status == 'released' %}<span class="note">Delivery confirmed and the shop has been paid.</span>{% endif %}
+    </div>
+  </article>
+  {% endfor %}
+</section>
+{% endblock %}

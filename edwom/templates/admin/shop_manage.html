@@ -1,0 +1,60 @@
+{% extends "admin/_base.html" %}
+{% from "_macros.html" import csrf, image_upload, logo with context %}
+{% block title %}{{ shop.name }}, Edwom admin{% endblock %}
+{% block admin %}
+<a class="back" href="{{ url_for('admin.shops') }}">All shops</a>
+<div class="dash-head">
+  {{ logo(shop, 'logo-lg') }}
+  <div>
+    <h1>{{ shop.name }}</h1>
+    <p class="lede" style="margin:0">{{ shop.town }}, {{ shop.region }}.
+      {% if shop.suspended %}<strong>Suspended: hidden from the mall and the owner can’t log in.</strong>{% elif shop.verified %}✓ Verified.{% else %}Not verified yet.{% endif %}</p>
+  </div>
+  <div class="dash-actions">
+    <a class="btn btn-primary" href="{{ url_for('admin.product_new', sid=shop.id) }}">Add a product</a>
+    <a class="btn btn-quiet" href="{{ url_for('main.shop', slug=shop.slug) }}" target="_blank" rel="noopener">View in mall</a>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat"><span>Products</span><strong>{{ products|length }}</strong></div>
+  <div class="stat"><span>Orders to fulfil</span><strong>{{ s.open }}</strong></div>
+  <div class="stat"><span>Held in escrow</span><strong>{{ s.held|cedi }}</strong></div>
+  <div class="stat"><span>Owed / paid to shop</span><strong>{{ s.payout|cedi }}</strong></div>
+</div>
+
+<div class="panel" id="products">
+  <div class="order-top"><h2>Products</h2><a class="btn btn-primary btn-sm" href="{{ url_for('admin.product_new', sid=shop.id) }}">Add a product</a></div>
+  {% with edit_endpoint='admin.product_edit', remove_endpoint='admin.product_remove' %}{% include "shared/_products_table.html" %}{% endwith %}
+</div>
+
+<div class="split" style="margin-top:18px">
+  <form class="panel form" method="post" enctype="multipart/form-data" novalidate>
+    {{ csrf() }}
+    <h2>Shop details and images</h2>
+    {{ image_upload('logo', 'Shop logo', shop.logo_key, errors, 'Square, at least 300 × 300 px.') }}
+    {{ image_upload('banner', 'Shop banner', shop.banner_key, errors, 'Wide, at least 1600 × 500 px.') }}
+    {% include "admin/_shop_fields.html" %}
+    <div><button class="btn btn-primary" type="submit">Save shop</button></div>
+  </form>
+  <aside>
+    <div class="panel">
+      <h2>Owner login</h2>
+      {% if shop.owner %}
+        <p style="margin:0">{{ shop.owner.name }}<br><span class="note">{{ shop.owner.email }}</span></p>
+        <p class="note">{% if shop.owner.must_change_password %}Hasn’t set their own password yet.{% elif shop.owner.last_login_at %}Last login {{ shop.owner.last_login_at|dt }} UTC.{% endif %}</p>
+        <form method="post" action="{{ url_for('admin.shop_reset_password', sid=shop.id) }}" data-confirm="Create a new temporary password for {{ shop.owner.email }}?">{{ csrf() }}<button class="btn btn-quiet btn-sm">Reset password</button></form>
+      {% else %}
+        <p class="note">Demo shop without a login.</p>
+      {% endif %}
+    </div>
+    <div class="panel">
+      <h2>Status</h2>
+      <div class="order-actions" style="margin-top:6px">
+        <form method="post" action="{{ url_for('admin.shop_toggle', sid=shop.id, what='verified') }}">{{ csrf() }}<button class="btn btn-quiet btn-sm">{{ 'Remove verified tick' if shop.verified else 'Mark verified' }}</button></form>
+        <form method="post" action="{{ url_for('admin.shop_toggle', sid=shop.id, what='suspended') }}" data-confirm="{{ 'Restore this shop?' if shop.suspended else 'Suspend this shop? It disappears from the mall and the owner is logged out.' }}">{{ csrf() }}<button class="btn btn-danger btn-sm">{{ 'Restore shop' if shop.suspended else 'Suspend shop' }}</button></form>
+      </div>
+    </div>
+  </aside>
+</div>
+{% endblock %}

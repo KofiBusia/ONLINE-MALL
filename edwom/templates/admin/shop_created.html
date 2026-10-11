@@ -1,0 +1,22 @@
+{% extends "admin/_base.html" %}
+{% block title %}Shop login, Edwom admin{% endblock %}
+{% block admin %}
+<div class="panel narrow momo" style="text-align:left">
+  <div class="done-mark" aria-hidden="true">✓</div>
+  <h1 style="font-size:1.7rem;text-align:center">{% if reset %}New password for {{ shop.name }}{% else %}{{ shop.name }} is set up{% endif %}</h1>
+  {% if password %}
+  <p class="note">Give these login details to the owner privately (in person, by phone or WhatsApp). This password is shown only once. They’ll be asked to change it when they first log in.</p>
+  <dl class="creds">
+    <dt>Login page</dt><dd>{{ url_for('auth.login', _external=True) }}</dd>
+    <dt>Email</dt><dd>{{ user.email }}</dd>
+    <dt>Temporary password</dt><dd class="pw">{{ password }}</dd>
+  </dl>
+  {% else %}
+  <p class="note">{{ user.email }} already had an Edwom account, so it’s now linked to this shop with its existing password.</p>
+  {% endif %}
+  <div class="order-actions" style="justify-content:center">
+    <a class="btn btn-primary" href="{{ url_for('admin.product_new', sid=shop.id) }}">Add the first product</a>
+    <a class="btn btn-quiet" href="{{ url_for('admin.shop_manage', sid=shop.id) }}">Manage shop</a>
+  </div>
+</div>
+{% endblock %}

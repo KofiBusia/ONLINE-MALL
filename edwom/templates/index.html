@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% from "_macros.html" import shop_card, toolbar, product_grid, pager with context %}
+{% block title %}{% if q %}“{{ q }}” on Edwom Online Mall{% else %}{{ super() }}{% endif %}{% endblock %}
+{% block content %}
+{% if not q %}
+<section class="hero">
+  <div class="wrap hero-in">
+    <div>
+      <h1>Ghana’s online mall for small businesses.</h1>
+      <p>Shop online from verified businesses in all 16 regions and get it delivered to your door. Pay with Mobile Money, card or cash on delivery, and the shop only gets paid after you confirm your order arrived.</p>
+      <div class="hero-cta">
+        <a class="btn btn-gold" href="#shop">Browse the shops</a>
+        <a class="btn btn-ghost" href="{{ url_for('seller.apply') }}">Open your shop</a>
+      </div>
+    </div>
+    <div class="flow">
+      <h2>How your money is protected</h2>
+      <ol>
+        <li><span><b>You pay Edwom, not the shop</b>We hold your payment safely while the order is on its way.</span></li>
+        <li><span><b>The shop delivers</b>Track every step, from confirmation to your Ghana Post GPS address.</span></li>
+        <li><span><b>You confirm, the shop is paid</b>If it never arrives or isn’t as described, you get your money back.</span></li>
+      </ol>
+      <div class="pay-row"><span class="pill">MTN MoMo</span><span class="pill">Telecel Cash</span><span class="pill">AT Money</span><span class="pill">Visa / Mastercard</span><span class="pill">Pay on delivery</span></div>
+    </div>
+  </div>
+</section>
+<div class="kente" aria-hidden="true"></div>
+{% endif %}
+
+<section class="wrap" id="shop">
+  {{ toolbar('main.index', cat, sort, q) }}
+  <div class="sec-h">
+    <h2>{% if q %}Shops matching “{{ q }}”{% else %}Shops in the mall{% endif %}</h2>
+    <span class="note">{{ shops|length }} shop{{ '' if shops|length == 1 else 's' }}</span>
+  </div>
+  {% if shops %}
+    <div class="shops">{% for s in shops %}{{ shop_card(s, cat) }}{% endfor %}</div>
+  {% else %}
+    <p class="note">No shop names match that. Matching products are listed below.</p>
+  {% endif %}
+
+  <div class="sec-h" style="margin-top:48px" id="products">
+    <h2>{% if q %}Products matching “{{ q }}”{% else %}Products from every shop{% endif %}</h2>
+    <span class="note">{{ page.total }} product{{ '' if page.total == 1 else 's' }}</span>
+  </div>
+  {{ product_grid(page.items) }}
+  {{ pager(page, 'main.index', {'q': q or None, 'cat': (cat if cat != 'all' else None), 'sort': (sort if sort != 'popular' else None), '_anchor': 'products'}) }}
+</section>
+{% endblock %}

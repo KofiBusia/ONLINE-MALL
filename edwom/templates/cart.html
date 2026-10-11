@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, tick, pic with context %}
+{% block title %}Your cart, Edwom Online Mall{% endblock %}
+{% block content %}
+<section class="wrap page">
+  <h1>Your cart</h1>
+  {% if not lines %}
+    <p class="lede">Your cart is empty. Walk through the mall and add something you like.</p>
+    <a class="btn btn-primary" href="{{ url_for('main.index') }}#shop">Browse the shops</a>
+  {% else %}
+  <p class="lede">Each shop packs and sends its own items, so delivery is charged per shop.</p>
+  <div class="split">
+    <form method="post" action="{{ url_for('main.cart_update') }}">
+      {{ csrf() }}
+      {% for shop_id, items in t.groups.items() %}
+      {% set shop = items[0][0].shop %}
+      <div class="panel shop-group">
+        <h2><span>{{ shop.name }}{{ tick(shop) }}</span><span class="note">Ships from {{ shop.town }}, {{ shop.region }}</span></h2>
+        {% for p, q in items %}
+        <div class="ci">
+          {{ pic(p.cover_key, p.icon, p.category, cls='mini') }}
+          <div>
+            <a class="ci-name" href="{{ url_for('main.product', pid=p.id) }}">{{ p.name }}</a>
+            <div class="note">{{ p.price|cedi }} each</div>
+          </div>
+          <div class="ci-right">
+            <strong>{{ (p.price * q)|cedi }}</strong>
+            <label class="sr" for="qty_{{ p.id }}">Quantity of {{ p.name }}</label>
+            <input id="qty_{{ p.id }}" name="qty_{{ p.id }}" type="number" min="0" max="{{ [p.stock, 99]|min }}" value="{{ q }}">
+            <button class="link" type="submit" name="remove" value="{{ p.id }}">Remove</button>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+      <button class="btn btn-quiet" type="submit">Update cart</button>
+    </form>
+    <aside class="panel sticky">
+      <h2>Order summary</h2>
+      <div class="sum" style="margin:14px 0">
+        <div><span>Items</span><span>{{ t.subtotal|cedi }}</span></div>
+        <div><span>Delivery to {{ current_region }} ({{ t.shops }} shop{{ '' if t.shops == 1 else 's' }})</span><span>{{ t.delivery|cedi }}</span></div>
+        <div class="tot"><span>Total</span><span>{{ t.total|cedi }}</span></div>
+      </div>
+      <a class="btn btn-primary" style="width:100%" href="{{ url_for('main.checkout') }}">Go to checkout</a>
+      <p class="note">Change the delivery region at the top of the page.</p>
+    </aside>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

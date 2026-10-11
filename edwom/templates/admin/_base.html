@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+{% set ep = request.endpoint or '' %}
+<div class="wrap admin">
+  <nav class="admin-nav" aria-label="Admin">
+    <span class="admin-label">Super admin</span>
+    <a href="{{ url_for('admin.index') }}" {% if ep == 'admin.index' %}aria-current="page"{% endif %}>Overview{% if nav_counts.disputes %}<span class="count warn">{{ nav_counts.disputes }}</span>{% endif %}</a>
+    <a href="{{ url_for('admin.shops') }}" {% if ep.startswith('admin.shop') or ep.startswith('admin.product') %}aria-current="page"{% endif %}>Shops</a>
+    <a href="{{ url_for('admin.applications') }}" {% if ep.startswith('admin.application') %}aria-current="page"{% endif %}>Applications{% if nav_counts.applications %}<span class="count">{{ nav_counts.applications }}</span>{% endif %}</a>
+    <a href="{{ url_for('admin.orders') }}" {% if ep == 'admin.orders' %}aria-current="page"{% endif %}>Orders</a>
+    <a href="{{ url_for('admin.activity') }}" {% if ep == 'admin.activity' %}aria-current="page"{% endif %}>Activity</a>
+    <a class="admin-cta" href="{{ url_for('admin.shop_new') }}">New shop</a>
+  </nav>
+  <div class="admin-main">{% block admin %}{% endblock %}</div>
+</div>
+{% endblock %}

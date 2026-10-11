@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "_macros.html" import toolbar, product_grid, pager, logo with context %}
+{% block title %}{{ shop.name }}, {{ shop.town }} on Edwom Online Mall{% endblock %}
+{% block meta %}<meta name="description" content="{{ shop.name }} in {{ shop.town }}, {{ shop.region }}. {{ (shop.about or "")[:140] }}">
+<meta property="og:title" content="{{ shop.name }} on Edwom Online Mall">
+{% if shop.banner_key or shop.logo_key %}<meta property="og:image" content="{{ url_for('main.media', key=(shop.banner_key or shop.logo_key), size='full', _external=True) }}">{% endif %}{% endblock %}
+{% block content %}
+<section class="store-head">
+  {% if shop.banner_key %}<div class="banner"><img src="{{ media_url(shop.banner_key, 'full') }}" alt="" decoding="async"></div>{% endif %}
+  <div class="wrap store-in {% if shop.banner_key %}has-banner{% endif %}">
+    <a class="back" href="{{ url_for('main.index') }}#shop">All shops</a>
+    <div class="store-title">{{ logo(shop, 'logo-lg') }}<h1>{{ shop.name }}</h1></div>
+    {% if shop.about %}<p>{{ shop.about }}</p>{% endif %}
+    <div class="facts">
+      {% if shop.verified %}<span class="fact">✓ Verified business</span>{% else %}<span class="fact warn">Verification in progress</span>{% endif %}
+      <span class="fact">{{ shop.town }}, {{ shop.region }}</span>
+      <span class="fact">On Edwom since {{ shop.since }}</span>
+      <span class="fact">{{ count }} product{{ '' if count == 1 else 's' }}</span>
+    </div>
+  </div>
+</section>
+<div class="kente thin" aria-hidden="true"></div>
+<section class="wrap">
+  {{ toolbar('main.shop', cat, sort, '', {'slug': shop.slug}) }}
+  {{ product_grid(page.items) }}
+  {{ pager(page, 'main.shop', {'slug': shop.slug, 'cat': (cat if cat != 'all' else None), 'sort': (sort if sort != 'popular' else None)}) }}
+</section>
+{% endblock %}

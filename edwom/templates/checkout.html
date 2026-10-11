@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, field, region_select, pic with context %}
+{% block title %}Checkout, Edwom Online Mall{% endblock %}
+{% block content %}
+<section class="wrap page">
+  <h1>Checkout</h1>
+  <p class="lede">Your payment is held by Edwom and released to each shop only after you confirm delivery.</p>
+  {% if errors.cart %}<div class="flash flash-error" style="margin-bottom:16px">{{ errors.cart }}</div>{% endif %}
+  <div class="split">
+    <form class="panel form" method="post" novalidate>
+      {{ csrf() }}
+      <h2>Delivery details</h2>
+      <div class="row2">
+        {{ field('name', 'Full name', data.name, errors, placeholder='Kwame Mensah', attrs='autocomplete="name" required') }}
+        {{ field('phone', 'Phone number', data.phone, errors, type='tel', hint='The rider will call this number.', placeholder='024 123 4567', attrs='autocomplete="tel" inputmode="tel" required') }}
+      </div>
+      <div class="row2">
+        {{ field('gps', 'Ghana Post GPS address', data.gps, errors, hint='Find it in the GhanaPostGPS app.', placeholder='GA-183-8164', attrs='required') }}
+        {{ region_select('region', data.region, errors) }}
+      </div>
+      {{ field('landmark', 'Landmark or directions <span class="hint">(optional)</span>', data.landmark, errors, placeholder='Near the Shell filling station, blue gate') }}
+      {{ field('email', 'Email for your receipt' ~ ('' if paystack_enabled else ' <span class="hint">(optional)</span>'), data.email, errors, type='email', placeholder='you@example.com', attrs='autocomplete="email"') }}
+      <fieldset>
+        <legend>How you’ll pay</legend>
+        {% for key, label in pay_methods.items() %}
+        <label class="opt"><input type="radio" name="pay" value="{{ key }}" {% if data.pay == key %}checked{% endif %}>
+          <span><b>{{ label }}</b><small>
+            {% if key == 'momo' %}MTN MoMo, Telecel Cash or AT Money. You’ll approve a prompt on your phone.
+            {% elif key == 'card' %}Processed securely by our payment partner.
+            {% else %}Cash or MoMo to the rider when your order arrives.{% endif %}
+          </small></span></label>
+        {% endfor %}
+        {% if errors.pay %}<span class="err">{{ errors.pay }}</span>{% endif %}
+      </fieldset>
+      <button class="btn btn-primary" type="submit">Place order for {{ t.total|cedi }}</button>
+      <p class="note">If you change the region, the delivery fee updates when you place the order.</p>
+    </form>
+    <aside class="panel sticky">
+      <h2>Your order</h2>
+      <ul class="lines">
+        {% for p, q in lines %}
+        <li>{{ pic(p.cover_key, p.icon, p.category, cls='mini sm') }}<span>{{ p.name }} × {{ q }}<br><small class="note">{{ p.shop.name }}</small></span><strong>{{ (p.price * q)|cedi }}</strong></li>
+        {% endfor %}
+      </ul>
+      <div class="sum">
+        <div><span>Items</span><span>{{ t.subtotal|cedi }}</span></div>
+        <div><span>Delivery ({{ t.shops }} shop{{ '' if t.shops == 1 else 's' }})</span><span>{{ t.delivery|cedi }}</span></div>
+        <div class="tot"><span>Total</span><span>{{ t.total|cedi }}</span></div>
+      </div>
+    </aside>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf with context %}
+{% block title %}Approve payment, Edwom Online Mall{% endblock %}
+{% block content %}
+<section class="wrap page">
+  <div class="panel narrow momo">
+    {% if co.pay_method == 'momo' %}
+      <h1 style="font-size:1.6rem">Approve the payment on your phone</h1>
+      <p class="note">A {{ network }} prompt was sent to {{ co.phone|mask_phone }}.</p>
+      <div class="phone" aria-hidden="true">Pay Edwom Market<b>{{ co.total|cedi }}</b>Enter PIN to confirm</div>
+    {% else %}
+      <h1 style="font-size:1.6rem">Card payment</h1>
+      <p class="note">With Paystack connected, the secure card form opens here.</p>
+      <div class="phone" aria-hidden="true">Edwom Market<b>{{ co.total|cedi }}</b>Visa / Mastercard</div>
+    {% endif %}
+    <form method="post">
+      {{ csrf() }}
+      <button class="btn btn-primary" type="submit">{% if co.pay_method == 'momo' %}I’ve approved it{% else %}Simulate successful payment{% endif %}</button>
+    </form>
+    <p class="note">Demo mode: no money moves. Add a Paystack key to take real payments.</p>
+  </div>
+</section>
+{% endblock %}

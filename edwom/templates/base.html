@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{% block title %}Edwom Online Mall: Ghana's online mall for small businesses{% endblock %}</title>
+{% block meta %}<meta name="description" content="Edwom is Ghana's online mall. Shop from verified small businesses in all 16 regions and pay with Mobile Money, card or on delivery.">
+<meta property="og:site_name" content="Edwom Online Mall">
+<meta property="og:title" content="Edwom Online Mall">
+<meta property="og:description" content="Ghana's online mall for small businesses.">{% endblock %}
+<meta name="theme-color" content="#0E5A3E">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛍️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+{% set ep = request.endpoint or '' %}
+<header class="top">
+  <div class="wrap bar">
+    <a class="logo" href="{{ url_for('main.index') }}" aria-label="Edwom Online Mall home">
+      <span class="logo-mark" aria-hidden="true"></span><span class="logo-text">edwom<small>online mall</small></span>
+    </a>
+    <form class="search" role="search" action="{{ url_for('main.index') }}" method="get">
+      <label for="q" class="sr">Search shops and products</label>
+      <input id="q" name="q" type="search" value="{{ request.args.get('q', '') if ep == 'main.index' else '' }}" placeholder="Search shops, products or towns" maxlength="80">
+      <button type="submit">Search</button>
+    </form>
+    <nav class="nav" aria-label="Main">
+      {% if current_user.is_authenticated and current_user.is_admin %}<a class="admin-link" href="{{ url_for('admin.index') }}" {% if ep.startswith('admin.') %}aria-current="page"{% endif %}>Admin</a>{% endif %}
+      <a href="{{ url_for('main.orders') }}" {% if ep in ['main.orders','main.checkout_detail'] %}aria-current="page"{% endif %}>Orders</a>
+      {% if current_user.is_authenticated and current_user.shop %}
+        <a class="sell" href="{{ url_for('seller.dashboard') }}">My shop</a>
+      {% else %}
+        <a class="sell" href="{{ url_for('seller.apply') }}">Sell<span class="lbl-long"> on Edwom</span></a>
+      {% endif %}
+      <a class="cart" href="{{ url_for('main.cart') }}" aria-label="Cart, {{ cart_count }} items">Cart<span class="badge">{{ cart_count }}</span></a>
+    </nav>
+  </div>
+  <div class="subbar">
+    <div class="wrap subbar-in">
+      <form class="region-form" method="post" action="{{ url_for('main.set_region') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="next" value="{{ request.full_path }}">
+        <label for="region-select">Deliver to</label>
+        <select id="region-select" name="region" data-autosubmit>
+          {% for r in regions %}<option {% if r == current_region %}selected{% endif %}>{{ r }}</option>{% endfor %}
+        </select>
+        <noscript><button class="btn-add" type="submit">Set</button></noscript>
+      </form>
+      <div class="account">
+        {% if current_user.is_authenticated %}
+          <span>Hi, {{ current_user.first_name }}</span>
+          <a href="{{ url_for('auth.change_password') }}">Password</a>
+          <form class="inline" method="post" action="{{ url_for('auth.logout') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="link" type="submit">Log out</button>
+          </form>
+        {% else %}
+          <a href="{{ url_for('auth.login', next=request.path) }}">Log in</a>
+          <a href="{{ url_for('auth.signup') }}">Create account</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</header>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="wrap flashes">
+    {% for cat, msg in messages %}<div class="flash flash-{{ cat }}" role="status">{{ msg }}</div>{% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+<main>{% block content %}{% endblock %}</main>
+
+<footer>
+  <div class="wrap foot-in">
+    <span>Edwom Online Mall. Ghana's small businesses, one market.{% if not paystack_enabled %} Payments are in demo mode.{% endif %}</span>
+    <nav aria-label="Footer">
+      <a href="{{ url_for('seller.apply') }}">Sell on Edwom</a>
+      <a href="{{ url_for('main.orders') }}">Track an order</a>
+    </nav>
+  </div>
+</footer>
+<script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+</body>
+</html>
