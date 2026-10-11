@@ -10,7 +10,7 @@ from .. import services as svc
 from ..catalog import product_form_data, save_product, save_shop_images
 from ..data import CAT_LABELS, REGIONS, STATUS_LABELS
 from ..extensions import db
-from ..models import AuditLog, Order, Product, Shop, ShopApplication, User
+from ..models import AuditLog, Media, Order, Product, Shop, ShopApplication, User
 from ..seed import unique_slug
 from ..utils import clean_phone, safe_next, temp_password, valid_email, valid_ghana_card, valid_phone
 
@@ -208,6 +208,57 @@ def shop_toggle(sid, what):
     db.session.commit()
     flash(f"{shop.name}: {msg}.", "ok")
     return redirect(safe_next(request.form.get("next")) or url_for("admin.shop_manage", sid=shop.id))
+
+
+@bp.post("/shops/<int:sid>/owner")
+@admin_required
+def shop_create_owner(sid):
+    shop = _shop(sid)
+    if shop.owner:
+        flash("This shop already has an owner login.", "error")
+        return redirect(url_for("admin.shop_manage", sid=sid))
+    name = (request.form.get("owner_name") or "").strip()[:120]
+    email = (request.form.get("owner_email") or "").strip()[:255].lower()
+    if len(name) < 3 or not valid_email(email):
+        flash("Enter the owner's full name and a valid email.", "error")
+        return redirect(url_for("admin.shop_manage", sid=sid))
+    existing = User.query.filter_by(email=email).first()
+    if existing and (existing.shop or existing.is_admin):
+        flash("This email already manages a shop or is an admin. Use another.", "error")
+        return redirect(url_for("admin.shop_manage", sid=sid))
+    password = temp_password()
+    if existing:
+        user, existing.role = existing, "seller"
+    else:
+        user = User(email=email, name=name, role="seller", must_change_password=True)
+        db.session.add(user)
+    user.set_password(password)
+    user.must_change_password = True
+    shop.owner = user
+    svc.audit("shop.create_owner", f"{shop.name} (owner {user.email})")
+    db.session.commit()
+    return render_template("admin/shop_created.html", shop=shop, user=user, password=password)
+
+
+@bp.post("/shops/<int:sid>/delete")
+@admin_required
+def shop_delete(sid):
+    shop = _shop(sid)
+    if Order.query.filter_by(shop_id=shop.id).count() > 0:
+        flash(f"Can't delete {shop.name}: it has order history. Suspend it instead to hide it from the mall.",
+              "error")
+        return redirect(url_for("admin.shop_manage", sid=sid))
+    name, owner = shop.name, shop.owner
+    Media.query.filter_by(shop_id=shop.id).delete(synchronize_session=False)
+    Product.query.filter_by(shop_id=shop.id).delete(synchronize_session=False)
+    ShopApplication.query.filter_by(shop_id=shop.id).update({"shop_id": None}, synchronize_session=False)
+    if owner and owner.role == "seller":
+        owner.role = "buyer"
+    db.session.delete(shop)
+    svc.audit("shop.delete", name)
+    db.session.commit()
+    flash(f"{name} deleted.", "ok")
+    return redirect(url_for("admin.shops"))
 
 
 @bp.post("/shops/<int:sid>/reset-password")

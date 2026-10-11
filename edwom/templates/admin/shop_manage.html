@@ -45,7 +45,13 @@
         <p class="note">{% if shop.owner.must_change_password %}Hasn’t set their own password yet.{% elif shop.owner.last_login_at %}Last login {{ shop.owner.last_login_at|dt }} UTC.{% endif %}</p>
         <form method="post" action="{{ url_for('admin.shop_reset_password', sid=shop.id) }}" data-confirm="Create a new temporary password for {{ shop.owner.email }}?">{{ csrf() }}<button class="btn btn-quiet btn-sm">Reset password</button></form>
       {% else %}
-        <p class="note">Demo shop without a login.</p>
+        <p class="note">This shop has no login yet. Create one so the owner can manage it.</p>
+        <form method="post" action="{{ url_for('admin.shop_create_owner', sid=shop.id) }}">
+          {{ csrf() }}
+          <div class="field"><label for="owner_name">Owner's full name</label><input id="owner_name" name="owner_name" required minlength="3" maxlength="120"></div>
+          <div class="field"><label for="owner_email">Owner's email</label><input id="owner_email" name="owner_email" type="email" required maxlength="255"></div>
+          <button class="btn btn-primary btn-sm" type="submit">Create login</button>
+        </form>
       {% endif %}
     </div>
     <div class="panel">
@@ -54,6 +60,11 @@
         <form method="post" action="{{ url_for('admin.shop_toggle', sid=shop.id, what='verified') }}">{{ csrf() }}<button class="btn btn-quiet btn-sm">{{ 'Remove verified tick' if shop.verified else 'Mark verified' }}</button></form>
         <form method="post" action="{{ url_for('admin.shop_toggle', sid=shop.id, what='suspended') }}" data-confirm="{{ 'Restore this shop?' if shop.suspended else 'Suspend this shop? It disappears from the mall and the owner is logged out.' }}">{{ csrf() }}<button class="btn btn-danger btn-sm">{{ 'Restore shop' if shop.suspended else 'Suspend shop' }}</button></form>
       </div>
+    </div>
+    <div class="panel">
+      <h2>Danger zone</h2>
+      <p class="note">Permanently deletes the shop, its products and photos. Only allowed when it has no order history — suspend it instead if it's ever taken an order.</p>
+      <form method="post" action="{{ url_for('admin.shop_delete', sid=shop.id) }}" data-confirm="Permanently delete {{ shop.name }} and all its products? This can't be undone.">{{ csrf() }}<button class="btn btn-danger btn-sm">Delete shop</button></form>
     </div>
   </aside>
 </div>
