@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf with context %}
+{% block title %}Pay the listing fee, Edwom Online Mall{% endblock %}
+{% block content %}
+<section class="wrap page">
+  <div class="panel narrow momo">
+    <h1 style="font-size:1.6rem">Open {{ app_row.business_name }}</h1>
+    <p class="note">One-time listing fee to open your shop.</p>
+    <div class="phone" aria-hidden="true">Edwom listing fee<b>{{ fee|cedi }}</b>{{ app_row.business_name }}</div>
+    <form method="post">
+      {{ csrf() }}
+      <button class="btn btn-primary" type="submit">Simulate successful payment</button>
+    </form>
+    <p class="note">Demo mode: no money moves. Add a Paystack key to take real payments.</p>
+  </div>
+</section>
+{% endblock %}

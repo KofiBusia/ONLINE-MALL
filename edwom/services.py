@@ -1,6 +1,6 @@
 """Business logic: cart, delivery, checkout, payment release and search."""
 from collections import OrderedDict
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from flask import current_app, session
 from flask_login import current_user
@@ -9,7 +9,7 @@ from sqlalchemy.orm import contains_eager, joinedload, selectinload
 
 from .data import CAT_LABELS, DEFAULT_REGION, HELD_STATUSES, REGIONS
 from .extensions import db
-from .models import AuditLog, Checkout, Order, OrderItem, Product, Shop, utcnow
+from .models import AuditLog, Checkout, Order, OrderItem, Product, Shop, ShopApplication, User, utcnow
 from .utils import new_code
 
 
@@ -213,3 +213,31 @@ def audit(action: str, detail: str = "") -> None:
     """Record an admin or seller action. Committed with the caller's transaction."""
     uid = current_user.id if current_user.is_authenticated else None
     db.session.add(AuditLog(user_id=uid, action=action, detail=(detail or "")[:300]))
+
+
+# ---------- Paid shop applications ----------
+
+def open_shop_from_application(app_row: ShopApplication) -> Shop:
+    """The listing fee cleared: create the shop and promote the applicant to seller.
+
+    Idempotent -- the Paystack callback and webhook can both land for the same
+    payment, so a second call just returns the shop already created by the first.
+    """
+    if app_row.shop_id:
+        return db.session.get(Shop, app_row.shop_id)
+    from .seed import unique_slug  # imported lazily: seed.py doesn't need to load at app start just for this
+    shop = Shop(name=app_row.business_name, slug=unique_slug(app_row.business_name), town=app_row.town,
+                region=app_row.region, about=app_row.about or "", verified=False,
+                since_year=datetime.now().year, awning=Shop.query.count() % 5,
+                phone=app_row.phone or None, ghana_card=app_row.ghana_card or None, reg_no=app_row.reg_no or None)
+    user = User.query.filter_by(email=app_row.email).first()
+    if user is None:
+        user = User(email=app_row.email, name=app_row.owner_name, phone=app_row.phone or None, role="seller")
+    else:
+        user.role = "seller"
+    shop.owner = user
+    db.session.add(shop)
+    db.session.flush()  # assigns shop.id
+    app_row.status, app_row.shop_id, app_row.fee_paid_at = "approved", shop.id, utcnow()
+    audit("shop.create_paid", f"{shop.name} (owner {user.email})")
+    return shop

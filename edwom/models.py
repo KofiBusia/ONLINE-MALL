@@ -170,6 +170,8 @@ class ShopApplication(db.Model):
     about = db.Column(db.String(600), default="")
     status = db.Column(db.String(10), nullable=False, default="new", index=True)
     shop_id = db.Column(db.Integer, db.ForeignKey("shops.id"))
+    fee_reference = db.Column(db.String(40), unique=True)
+    fee_paid_at = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
 
 

@@ -43,6 +43,7 @@ class Config:
 
     PAYSTACK_SECRET_KEY = os.environ.get("PAYSTACK_SECRET_KEY", "").strip()
     COMMISSION_RATE = float(os.environ.get("COMMISSION_RATE", "0.08"))
+    SHOP_FEE_PESEWAS = int(os.environ.get("SHOP_FEE_PESEWAS", "15000"))  # GH₵150 one-time listing fee
     DELIVERY_SAME_REGION = int(os.environ.get("DELIVERY_SAME_REGION_PESEWAS", "2500"))
     DELIVERY_OTHER_REGION = int(os.environ.get("DELIVERY_OTHER_REGION_PESEWAS", "4500"))
     AUTO_RELEASE_HOURS = int(os.environ.get("AUTO_RELEASE_HOURS", "72"))
