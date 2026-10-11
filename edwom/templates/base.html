@@ -6,8 +6,20 @@
 <title>{% block title %}Edwom Online Mall: Ghana's online mall for small businesses{% endblock %}</title>
 {% block meta %}<meta name="description" content="Edwom is Ghana's online mall. Shop from verified small businesses in all 16 regions and pay with Mobile Money, card or on delivery.">
 <meta property="og:site_name" content="Edwom Online Mall">
-<meta property="og:title" content="Edwom Online Mall">
-<meta property="og:description" content="Ghana's online mall for small businesses.">{% endblock %}
+<meta property="og:type" content="website">
+<meta property="og:title" content="Edwom Online Mall: Ghana's online mall for small businesses">
+<meta property="og:description" content="Shop verified small businesses in all 16 regions of Ghana. Pay with Mobile Money, card or on delivery.">
+<meta property="og:url" content="{{ request.url }}">
+<meta property="og:image" content="{{ url_for('static', filename='img/og-image.png', _external=True) }}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Edwom Online Mall — Ghana's online mall for small businesses">
+<meta property="og:locale" content="en_GH">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Edwom Online Mall: Ghana's online mall for small businesses">
+<meta name="twitter:description" content="Shop verified small businesses in all 16 regions of Ghana. Pay with Mobile Money, card or on delivery.">
+<meta name="twitter:image" content="{{ url_for('static', filename='img/og-image.png', _external=True) }}">
+<link rel="canonical" href="{{ request.url }}">{% endblock %}
 <meta name="theme-color" content="#0E5A3E">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛍️</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
