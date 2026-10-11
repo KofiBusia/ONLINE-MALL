@@ -4,7 +4,7 @@ import secrets
 from flask import Blueprint, Response, abort, current_app, flash, redirect, render_template, request, session, url_for
 from flask_login import current_user
 
-from .. import payments
+from .. import ogimage, payments
 from .. import services as svc
 from ..data import CAT_LABELS, PAY_METHODS, REGIONS, SORTS
 from ..extensions import csrf, db, limiter
@@ -77,6 +77,15 @@ def shop(slug):
     return render_template("shop.html", shop=shop, page=page, cat=cat, sort=sort, count=count)
 
 
+@bp.get("/shops/<slug>/og.png")
+def shop_og_image(slug):
+    shop = Shop.query.filter_by(slug=slug, suspended=False).first_or_404()
+    count = Product.query.filter_by(shop_id=shop.id, active=True, published=True).count()
+    resp = Response(ogimage.render_shop_card(shop, count), mimetype="image/png")
+    resp.headers["Cache-Control"] = "public, max-age=86400"
+    return resp
+
+
 @bp.get("/p/<int:pid>")
 def product(pid):
     item = db.session.get(Product, pid)
@@ -89,6 +98,16 @@ def product(pid):
             .order_by(Product.sold.desc()).limit(4).all())
     fee = svc.delivery_fee(item.shop.region, svc.current_region())
     return render_template("product.html", p=item, more=more, fee=fee)
+
+
+@bp.get("/p/<int:pid>/og.png")
+def product_og_image(pid):
+    item = db.session.get(Product, pid)
+    if not item or not item.active or item.shop.suspended:
+        abort(404)
+    resp = Response(ogimage.render_product_card(item), mimetype="image/png")
+    resp.headers["Cache-Control"] = "public, max-age=86400"
+    return resp
 
 
 def _can_preview(item: Product) -> bool:

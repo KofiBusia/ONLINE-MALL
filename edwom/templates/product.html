@@ -1,11 +1,12 @@
 {% extends "base.html" %}
 {% from "_macros.html" import csrf, tick, product_grid, pic, price_tag with context %}
 {% block title %}{{ p.name }} from {{ p.shop.name }}, Edwom Online Mall{% endblock %}
-{% block meta %}<meta name="description" content="{{ p.name }} from {{ p.shop.name }}, {{ p.shop.town }}. {{ p.price|cedi }}. {{ (p.description or '')[:120] }}">
-<meta property="og:type" content="product">
-<meta property="og:title" content="{{ p.name }} | {{ p.price|cedi }}">
-<meta property="og:description" content="Sold by {{ p.shop.name }} on Edwom Online Mall">
-{% if p.cover_key %}<meta property="og:image" content="{{ url_for('main.media', key=p.cover_key, size='full', _external=True) }}">{% endif %}{% endblock %}
+{% block meta_description %}{{ p.name }} from {{ p.shop.name }}, {{ p.shop.town }}. {{ p.price|cedi }}. {{ (p.description or '')[:120] }}{% endblock %}
+{% block og_type %}product{% endblock %}
+{% block og_title %}{{ p.name }} | {{ p.price|cedi }}{% endblock %}
+{% block og_description %}Sold by {{ p.shop.name }} on Edwom Online Mall{% endblock %}
+{% block og_image %}{{ url_for('main.product_og_image', pid=p.id, _external=True) }}{% endblock %}
+{% block og_image_alt %}{{ p.name }}, {{ p.price|cedi }}{% endblock %}
 {% block content %}
 <section class="wrap page">
   {% if not p.published %}<div class="flash flash-error" style="margin-bottom:16px">Draft preview. Buyers can’t see this product until it’s published.</div>{% endif %}

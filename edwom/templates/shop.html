@@ -1,9 +1,11 @@
 {% extends "base.html" %}
 {% from "_macros.html" import toolbar, product_grid, pager, logo with context %}
 {% block title %}{{ shop.name }}, {{ shop.town }} on Edwom Online Mall{% endblock %}
-{% block meta %}<meta name="description" content="{{ shop.name }} in {{ shop.town }}, {{ shop.region }}. {{ (shop.about or "")[:140] }}">
-<meta property="og:title" content="{{ shop.name }} on Edwom Online Mall">
-{% if shop.banner_key or shop.logo_key %}<meta property="og:image" content="{{ url_for('main.media', key=(shop.banner_key or shop.logo_key), size='full', _external=True) }}">{% endif %}{% endblock %}
+{% block meta_description %}{{ shop.name }} in {{ shop.town }}, {{ shop.region }}. {{ (shop.about or "")[:140] }}{% endblock %}
+{% block og_title %}{{ shop.name }} on Edwom Online Mall{% endblock %}
+{% block og_description %}{{ (shop.about or (shop.name ~ " — on Edwom Online Mall, " ~ shop.town ~ ", " ~ shop.region ~ "."))[:200] }}{% endblock %}
+{% block og_image %}{{ url_for('main.shop_og_image', slug=shop.slug, _external=True) }}{% endblock %}
+{% block og_image_alt %}{{ shop.name }} on Edwom Online Mall{% endblock %}
 {% block content %}
 <section class="store-head">
   {% if shop.banner_key %}<div class="banner"><img src="{{ media_url(shop.banner_key, 'full') }}" alt="" decoding="async"></div>{% endif %}
