@@ -3,6 +3,85 @@ document.querySelectorAll('[data-autosubmit]').forEach(function (el) {
   el.addEventListener('change', function () { if (el.form) el.form.submit(); });
 });
 
+// Toast: a brief, auto-dismissing confirmation that doesn't require a page reload.
+function showToast(message, kind) {
+  var stack = document.getElementById('toast-stack');
+  if (!stack) {
+    stack = document.createElement('div');
+    stack.id = 'toast-stack';
+    stack.className = 'toast-stack';
+    stack.setAttribute('role', 'status');
+    stack.setAttribute('aria-live', 'polite');
+    document.body.appendChild(stack);
+  }
+  var toast = document.createElement('div');
+  toast.className = 'toast' + (kind === 'error' ? ' is-error' : '');
+  toast.textContent = message;
+  stack.appendChild(toast);
+  requestAnimationFrame(function () { toast.classList.add('is-in'); });
+  setTimeout(function () {
+    toast.classList.remove('is-in');
+    setTimeout(function () { toast.remove(); }, 250);
+  }, 2400);
+}
+
+// Add to cart without a full page reload: updates the header cart count and
+// gives the button instant feedback. Falls back to a normal form submit
+// (full reload, server-rendered flash message) if JS or the request fails,
+// and never intercepts "Buy now", which needs to navigate to /cart.
+document.querySelectorAll('form[data-cart-form]').forEach(function (form) {
+  var lastClicked = null;
+  form.querySelectorAll('button[type="submit"]').forEach(function (b) {
+    b.addEventListener('click', function () { lastClicked = b; });
+  });
+  form.addEventListener('submit', function (e) {
+    var submitter = e.submitter || lastClicked || form.querySelector('button[type="submit"]');
+    if (submitter && submitter.name === 'go') return; // Buy now: real navigation to /cart
+    if (!submitter || submitter.disabled) { e.preventDefault(); return; }
+    var btn = submitter;
+    e.preventDefault();
+    var original = btn.textContent;
+    btn.disabled = true;
+    btn.classList.add('is-busy');
+    fetch(form.action, {
+      method: 'POST',
+      body: new FormData(form),
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        var cartLink = document.querySelector('.nav .cart');
+        var badge = cartLink && cartLink.querySelector('.badge');
+        if (badge) {
+          badge.textContent = data.cart_count;
+          badge.classList.remove('is-pulsing');
+          void badge.offsetWidth; // restart the animation
+          badge.classList.add('is-pulsing');
+        }
+        if (cartLink) cartLink.setAttribute('aria-label', 'Cart, ' + data.cart_count + ' items');
+        showToast(data.message, data.ok ? 'ok' : 'error');
+        btn.classList.remove('is-busy');
+        if (data.ok) {
+          btn.textContent = 'Added ✓';
+          btn.classList.add('is-added');
+          setTimeout(function () {
+            btn.textContent = original;
+            btn.classList.remove('is-added');
+            btn.disabled = false;
+          }, 1400);
+        } else {
+          btn.textContent = 'Sold out';
+          btn.disabled = true;
+        }
+      })
+      .catch(function () {
+        btn.disabled = false;
+        btn.classList.remove('is-busy');
+        form.submit(); // network/JS error: fall back to a normal page submit
+      });
+  });
+});
+
 document.querySelectorAll('form[data-confirm]').forEach(function (form) {
   form.addEventListener('submit', function (e) {
     if (!window.confirm(form.dataset.confirm)) e.preventDefault();

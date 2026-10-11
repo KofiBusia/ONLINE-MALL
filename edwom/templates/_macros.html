@@ -21,7 +21,7 @@
     <div class="meta"><span>{% if p.rating %}★ {{ '%.1f'|format(p.rating) }}{% else %}New{% endif %}</span><span>{{ p.shop.town }}</span></div>
     <div class="card-foot">
       {{ price_tag(p) }}
-      <form method="post" action="{{ url_for('main.cart_add', pid=p.id) }}">
+      <form method="post" action="{{ url_for('main.cart_add', pid=p.id) }}" data-cart-form>
         {{ csrf() }}<input type="hidden" name="next" value="{{ request.full_path }}">
         {% if p.stock > 0 %}<button class="btn-add" type="submit" aria-label="Add {{ p.name }} to cart">Add</button>
         {% else %}<button class="btn-add" type="button" disabled>Sold out</button>{% endif %}

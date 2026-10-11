@@ -71,6 +71,16 @@ header.top{position:sticky;top:0;z-index:30;background:var(--surface);border-bot
 .flash{border-radius:12px;padding:11px 16px;font-weight:600;font-size:.94rem;background:var(--tint);border-left:5px solid var(--green)}
 .flash-error{background:var(--t-food);border-left-color:var(--red)}
 
+/* Add-to-cart feedback: live toasts + button/badge micro-animations */
+.toast-stack{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:90;display:grid;gap:8px;width:min(92vw,380px);pointer-events:none}
+.toast{pointer-events:auto;border-radius:12px;padding:12px 18px;font-weight:600;font-size:.92rem;background:var(--ink);color:var(--surface);box-shadow:var(--shadow);border-left:5px solid var(--gold);opacity:0;transform:translateY(10px);transition:opacity .22s ease,transform .22s ease}
+.toast.is-in{opacity:1;transform:translateY(0)}
+.toast.is-error{border-left-color:var(--red)}
+.btn-add.is-added{background:var(--green);color:var(--on-green)}
+.btn-add.is-busy{opacity:.7;cursor:wait}
+@keyframes badge-pulse{0%{transform:scale(1)}35%{transform:scale(1.35)}100%{transform:scale(1)}}
+.badge.is-pulsing{animation:badge-pulse .38s ease}
+
 /* Kente band */
 .kente{height:26px;background:
   repeating-linear-gradient(0deg,rgba(0,0,0,.2) 0 2px,transparent 2px 6px),

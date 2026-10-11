@@ -38,7 +38,7 @@
         <span>{{ p.category|cat_label }}</span>
       </div>
       {% if p.stock > 0 and p.published %}
-      <form class="buy-row" method="post" action="{{ url_for('main.cart_add', pid=p.id) }}">
+      <form class="buy-row" method="post" action="{{ url_for('main.cart_add', pid=p.id) }}" data-cart-form>
         {{ csrf() }}
         <div class="field"><label for="qty">Quantity</label><input class="qty-input" id="qty" name="qty" type="number" min="1" max="{{ [p.stock, 99]|min }}" value="1"></div>
         <button class="btn btn-quiet" type="submit">Add to cart</button>

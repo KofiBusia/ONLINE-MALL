@@ -133,12 +133,16 @@ def cart_add(pid):
     qty = max(1, min(99, to_int(request.form.get("qty"), 1)))
     cart = session.setdefault("cart", {})
     new_qty = min(cart.get(str(pid), 0) + qty, item.stock, 99)
+    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
     if new_qty <= 0:
-        flash("Sorry, that product is sold out.", "error")
+        ok, message = False, "Sorry, that product is sold out."
     else:
         cart[str(pid)] = new_qty
         session.modified = True
-        flash(f"Added to cart: {item.name}", "ok")
+        ok, message = True, f"Added to cart: {item.name}"
+    if is_ajax:
+        return {"ok": ok, "message": message, "cart_count": svc.cart_count(), "in_cart": new_qty}
+    flash(message, "ok" if ok else "error")
     if request.form.get("go") == "cart":
         return redirect(url_for("main.cart"))
     return redirect_back()
